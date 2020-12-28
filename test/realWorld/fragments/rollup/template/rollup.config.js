@@ -1,0 +1,2 @@
+
+export default __ROLLUP_CONFIG__
