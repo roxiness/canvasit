@@ -11,7 +11,7 @@ function deepAssign(target, ...sources) {
       target.push(...source)
     else 
       for (const key of Reflect.ownKeys(source)) {
-        if ([source[key], target[key]].every(isObject))
+        if ([source[key], target[key]].every(isObjectOrArray))
         {
           deepAssign(target[key], source[key])
         }
@@ -23,5 +23,6 @@ function deepAssign(target, ...sources) {
 }
 
 const isObject = v => v && typeof v === 'object' && !['Array', 'Date', 'Regexp'].includes(v.constructor.name)
+const isObjectOrArray = v => Array.isArray(v) || isObject(v)
 
-module.exports = { deepAssign, isObject }
+module.exports = { deepAssign, isObject, isObjectOrArray }
