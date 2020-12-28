@@ -1,0 +1,29 @@
+{
+  "name": "templater",
+  "version": "1.0.0",
+  "description": "",
+  "main": "templater.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "ava": "^3.14.0"
+  },
+  "scripts": {
+    "test": "ava"
+  },
+  "author": "",
+  "license": "ISC",
+  "ava": {
+    "files": [
+      "test/**/*.spec.*"
+    ],
+    "ignoredByWatcher": [
+      "**/output",
+      "**/spank-summary.json"
+    ]
+  },
+  "dependencies": {
+    "fs-extra": "^9.0.1"
+  }
+}
