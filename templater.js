@@ -1,12 +1,14 @@
 const { resolve, relative } = require('path')
 const { deepAssign, isObjectOrArray } = require('./utils')
-const { outputFileSync, readdirSync, statSync, existsSync, readFileSync, writeFileSync, mkdirSync } = require('fs-extra')
+const { mergeFiles } = require('./lib/fileMerger')
+const { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } = require('fs-extra')
 
 function merge(fragmentsDir, combos, output) {
     const fragments = combos.map(name => ({
         blueprint: require(`${fragmentsDir}/${name}/blueprint.js`),
         path: resolve(fragmentsDir, name)
     }))
+    const folders = fragments.map(f => f.path+'/template')
     const configs = {}
     const helpers = {
         transform: (filename, transformFn) => {
@@ -32,11 +34,7 @@ function merge(fragmentsDir, combos, output) {
             }))
     }
     // copy files
-    for (let fragment of fragments) {
-        const path = resolve(fragment.path, 'template')
-        if (existsSync(path))
-            copyFiles(path, resolve(output))
-    }
+    mergeFiles({ folders, configs, output })
 
     // run transforms
     for (let fragment of fragments) {
@@ -52,8 +50,9 @@ function merge(fragmentsDir, combos, output) {
             configs[name] = {}
             for (let fragment of fragments) {
                 const source = fragment.blueprint.configs({ getConfig, stringify })[name]
-                if ([configs[name], source].every(isObjectOrArray))
-                    deepAssign(configs[name], source)
+                if ([configs[name], source].every(isObjectOrArray)) {
+                    configs[name] = deepAssign(configs[name], source)
+                }
                 else if (typeof source !== 'undefined')
                     configs[name] = source
             }
