@@ -1,8 +1,10 @@
 const test = require('ava').default
 const { merge } = require('../../templater')
+const output = __dirname+'/output'
+const fragmentsDir = __dirname + '/fragments'
 
 test('config from self', t => {
-    const { configs } = merge(__dirname + '/fragments', ['getConfigFromSelf'])
+    const { configs } = merge(fragmentsDir, ['getConfigFromSelf'], output)
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -12,7 +14,7 @@ test('config from self', t => {
 })
 
 test('config from other', t => {
-    const { configs } = merge(__dirname + '/fragments', ['getConfigFromSelf', 'getConfigFromOther'])
+    const { configs } = merge(fragmentsDir, ['getConfigFromSelf', 'getConfigFromOther'], output)
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -24,7 +26,7 @@ test('config from other', t => {
 })
 
 test('config from derived', t => {
-    const { configs } = merge(__dirname + '/fragments', ['getConfigFromSelf', 'getConfigFromOther', 'getConfigFromDerived'])
+    const { configs } = merge(fragmentsDir, ['getConfigFromSelf', 'getConfigFromOther', 'getConfigFromDerived'], output)
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -38,7 +40,7 @@ test('config from derived', t => {
 })
 
 test('config from derived reversed', t => {
-    const { configs } = merge(__dirname + '/fragments', ['getConfigFromDerived', 'getConfigFromOther', 'getConfigFromSelf'])
+    const { configs } = merge(fragmentsDir, ['getConfigFromDerived', 'getConfigFromOther', 'getConfigFromSelf'], output)
 
     t.deepEqual(configs, {
         string: 'string',
@@ -53,7 +55,7 @@ test('config from derived reversed', t => {
 })
 
 test('loop', t => {
-    const { configs } = merge(__dirname + '/fragments', ['getLoop'])
+    const { configs } = merge(fragmentsDir, ['getLoop'], output)
     t.deepEqual(configs, {
         loop1: {},
         loop2: {},

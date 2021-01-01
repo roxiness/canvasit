@@ -9,6 +9,10 @@ module.exports = {
         output: {
             bool: 'true',
             fn: 'aFakeFunction("oot")',
+            actualArray: [
+                '"thing one"',
+                '"thing two"'
+            ],  
             compiled: {
                 literal: getConfig('literalArray'),
                 literalArray: getConfig('literalArray'),
