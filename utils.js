@@ -7,17 +7,17 @@
  */
 function deepAssign(target, ...sources) {
   for (const source of sources) {
-    if ([source, target].every(Array.isArray))
-      target.push(...source)
-    else 
+    if (Array.isArray(source)) {
+      target = Array.isArray(target) ? target : []
+      target.push(...source)      
+    }
+    else
       for (const key of Reflect.ownKeys(source)) {
-        if ([source[key], target[key]].every(isObjectOrArray))
-        {
-          deepAssign(target[key], source[key])
+        if ([source[key], target[key]].every(isObject)) {
+          target[key] = deepAssign(target[key], source[key])
         }
         else target[key] = source[key]
       }
-    
   }
   return target
 }
