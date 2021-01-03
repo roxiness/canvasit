@@ -1,2 +1,2 @@
-module.exports.patch = ({ placeholders, createAfter }) => {    
+module.exports.patch = ({ placeholders}) => {
 }

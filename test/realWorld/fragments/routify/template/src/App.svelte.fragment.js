@@ -1,11 +1,12 @@
-module.exports.patch = ({ placeholders, configs, stringify, createAfter }) => {    
-    createAfter('constants', 'configs')    
+module.exports.patch = ({ placeholders, configs }) => { 
+    console.log(placeholders._placeholders)
+    placeholders.constants.append('configs')
 
-    placeholders.imports += `
+    placeholders.imports.push`
         import { Router } from "@roxi/routify";
         import { routes } from "../.routify/routes";
     `
     // placeholders.configs += `const config = ${stringify(configs.routify.runtime)}`
 
-    placeholders.html += `< Router { config } />`
+    placeholders.html.push`< Router { config } />`
 }

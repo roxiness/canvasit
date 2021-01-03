@@ -26,5 +26,6 @@ export default {
       "thing two"
     ]
   }
-}`)
+}
+`)
 })

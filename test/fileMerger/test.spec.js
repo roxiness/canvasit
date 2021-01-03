@@ -17,5 +17,5 @@ test('files are copied and patched', t => {
     
     'module.exports.default = `I\'m overwritten`\n\n'+
     
-    'module.exports.placeholder20 = 20')
+    'module.exports.placeholder20 = 20\n')
 })

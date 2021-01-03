@@ -16,7 +16,7 @@
   "license": "ISC",
   "ava": {
     "files": [
-      "test/**/*.spec.*"
+      "**/*.spec.*"
     ],
     "ignoredByWatcher": [
       "**/output",
@@ -24,6 +24,7 @@
     ]
   },
   "dependencies": {
-    "fs-extra": "^9.0.1"
+    "fs-extra": "^9.0.1",
+    "prettier": "^2.2.1"
   }
 }
