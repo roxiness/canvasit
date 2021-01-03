@@ -1,12 +1,31 @@
 const test = require('ava').default
 const { merge } = require('../../templater')
-const { emptyDirSync, readdirSync, readFileSync } = require('fs-extra')
+const { resolve } = require('path')
+const { emptyDirSync, readdirSync, readFileSync, statSync } = require('fs-extra')
 
 test('realworld', t => {
   emptyDirSync(__dirname + '/output')
 
   const res = merge(__dirname + '/fragments', ['app', 'rollup', 'svelte', 'routify'], __dirname + '/output')
 
-  // TODO
-  t.assert('TODO')
+  compareDirs(__dirname + '/output', __dirname + '/expect', t)
 })
+
+
+
+
+function compareDirs(dir1, dir2, t) {
+  const files = readdirSync(dir1)
+  for (const file of files) {
+    const filepath1 = resolve(dir1, file)
+    const filepath2 = resolve(dir2, file)
+    const isDir = statSync(filepath1).isDirectory()
+    if (isDir)
+      compareDirs(filepath1, filepath2, t)
+    else {
+      const content1 = readFileSync(filepath1, 'utf-8')
+      const content2 = readFileSync(filepath2, 'utf-8')
+      t.is(content1, content2, `files should match:\n  ${filepath1},\n  ${filepath2}`)
+    }
+  }
+}

@@ -1,5 +1,10 @@
 module.exports = {
     configs: ({ getConfig }) => ({
+        routify: {
+            runtime: {
+                useHash: 'false'
+            }
+        },
         packagejson: {
             scripts: {
                 'dev:routify': 'routify'
