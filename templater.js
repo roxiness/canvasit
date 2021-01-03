@@ -1,14 +1,14 @@
-const { resolve, relative } = require('path')
-const { deepAssign, isObjectOrArray } = require('./utils')
+const { resolve } = require('path')
+const { deepAssign, isObjectOrArray, stringify } = require('./utils')
 const { mergeFiles } = require('./lib/fileMerger')
-const { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } = require('fs-extra')
+const { readFileSync, writeFileSync } = require('fs-extra')
 
 function merge(fragmentsDir, combos, output) {
     const fragments = combos.map(name => ({
         blueprint: require(`${fragmentsDir}/${name}/blueprint.js`),
         path: resolve(fragmentsDir, name)
     }))
-    const folders = fragments.map(f => f.path+'/template')
+    const folders = fragments.map(f => f.path + '/template')
     const configs = {}
     const helpers = {
         transform: (filename, transformFn) => {
@@ -61,41 +61,5 @@ function merge(fragmentsDir, combos, output) {
     }
 }
 
-function copyFiles(source, target, root) {
-    root = root || source
-    const dir = readdirSync(source)
-    for (filename of dir) {
-        const file = resolve(source, filename)
-        const isDir = statSync(file).isDirectory()
-        const dest = resolve(target, relative(root, file))
-        if (isDir) {
-            mkdirSync(dest)
-            copyFiles(file, target, root)
-        } else {
-            const content = readFileSync(file, 'utf-8')
-            writeFileSync(dest, content)
-        }
-    }
-}
 
-function stringify(obj, level = 0) {
-    const pad = " ".repeat(level * 2)
-    const longPad = pad + "  "
-    const entries = []
-    const isArray = Array.isArray(obj)
-
-    for ([key, val] of Object.entries(obj)) {
-        const isString = typeof val === 'string'
-        const keyPrefix = isArray ? '' : `${key}: `
-        const value = isString ? val : stringify(val, level + 1)
-        entries.push(longPad + keyPrefix + value)
-    }
-
-    return isArray
-        ? `[\n${entries.join(',\n')}\n${pad}]`
-        : `{\n${entries.join(',\n')}\n${pad}}`
-}
-
-module.exports = {
-    merge, stringify
-}
+module.exports = { merge }
