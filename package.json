@@ -2,7 +2,7 @@
   "name": "canvasit",
   "version": "0.0.2",
   "description": "",
-  "main": "templater.js",
+  "main": "canvasit.js",
   "directories": {
     "test": "test"
   },

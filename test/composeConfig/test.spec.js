@@ -1,10 +1,13 @@
 const test = require('ava').default
-const { merge } = require('../../templater')
-const output = __dirname+'/output'
-const fragmentsDir = __dirname + '/fragments'
+const { merge } = require('../../canvasit')
+
+function mergeWithBaseDir(combos){
+    const output = __dirname+'/output'
+    return merge(combos.map(name => __dirname+'/fragments/'+name), output)
+}
 
 test('config from self', t => {
-    const { configs } = merge(fragmentsDir, ['getConfigFromSelf'], output)
+    const { configs } = mergeWithBaseDir(['getConfigFromSelf'])
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -14,7 +17,7 @@ test('config from self', t => {
 })
 
 test('config from other', t => {
-    const { configs } = merge(fragmentsDir, ['getConfigFromSelf', 'getConfigFromOther'], output)
+    const { configs } = mergeWithBaseDir(['getConfigFromSelf', 'getConfigFromOther'])
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -26,7 +29,7 @@ test('config from other', t => {
 })
 
 test('config from derived', t => {
-    const { configs } = merge(fragmentsDir, ['getConfigFromSelf', 'getConfigFromOther', 'getConfigFromDerived'], output)
+    const { configs } = mergeWithBaseDir(['getConfigFromSelf', 'getConfigFromOther', 'getConfigFromDerived'])
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
@@ -40,7 +43,7 @@ test('config from derived', t => {
 })
 
 test('config from derived reversed', t => {
-    const { configs } = merge(fragmentsDir, ['getConfigFromDerived', 'getConfigFromOther', 'getConfigFromSelf'], output)
+    const { configs } = mergeWithBaseDir(['getConfigFromDerived', 'getConfigFromOther', 'getConfigFromSelf'])
 
     t.deepEqual(configs, {
         string: 'string',
@@ -55,7 +58,7 @@ test('config from derived reversed', t => {
 })
 
 test('loop', t => {
-    const { configs } = merge(fragmentsDir, ['getLoop'], output)
+    const { configs } = mergeWithBaseDir(['getLoop'])
     t.deepEqual(configs, {
         loop1: {},
         loop2: {},

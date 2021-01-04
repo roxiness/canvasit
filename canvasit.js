@@ -5,8 +5,8 @@ const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
 const { outputFileSync, existsSync } = require('fs-extra')
 
-function merge(fragmentsDir, combos, output) {
-    const fragments = createFragments(fragmentsDir, combos)
+function merge(combos, output) {
+    const fragments = createFragments(combos)
     const folders = fragments.map(f => f.folder)
     const configs = {}
     const ctx = { configs, fragments, output, folders }
@@ -36,12 +36,10 @@ function merge(fragmentsDir, combos, output) {
 }
 
 /**
- * @param {string} fragmentsDir 
  * @param {string[]} combos 
  */
-function createFragments(fragmentsDir, combos) {
-    return combos.map(name => {
-        const path = resolve(fragmentsDir, name)
+function createFragments( combos) {
+    return combos.map(path => {
         const blueprintPath = resolve(path, 'blueprint.js')
         return {
             blueprint: existsSync(blueprintPath) && require(blueprintPath),

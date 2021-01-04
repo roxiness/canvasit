@@ -1,11 +1,11 @@
 const test = require('ava').default
-const { merge } = require('../../templater')
+const { merge } = require('../../canvasit')
 const { readFileSync, emptyDirSync } = require('fs-extra')
 
 test('configs are written correctly', t => {    
     emptyDirSync(__dirname + '/output')
     const dir = __dirname + '/output'
-    const res = merge(__dirname + '/fragments', ['base'], dir)
+    const res = merge([__dirname + '/fragments/base'], dir)
 
     t.is(
         readFileSync(dir + '/myconfig.js', 'utf8'),
