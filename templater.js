@@ -6,15 +6,7 @@ const { patchFile } = require('./lib/filePatcher')
 const { outputFileSync, existsSync } = require('fs-extra')
 
 function merge(fragmentsDir, combos, output) {
-    const fragments = combos.map(name => {
-        const path = resolve(fragmentsDir, name)
-        const blueprintPath = resolve(path, 'blueprint.js')
-        return {
-            blueprint: existsSync(blueprintPath) && require(blueprintPath),
-            folder: resolve(path, 'template'),
-            path,
-        }
-    })
+    const fragments = createFragments(fragmentsDir, combos)
     const folders = fragments.map(f => f.folder)
     const configs = {}
     const ctx = { configs, fragments, output, folders }
@@ -41,6 +33,22 @@ function merge(fragmentsDir, combos, output) {
     handleEvent('afterPatch')
 
     return { configs }
+}
+
+/**
+ * @param {string} fragmentsDir 
+ * @param {string[]} combos 
+ */
+function createFragments(fragmentsDir, combos) {
+    return combos.map(name => {
+        const path = resolve(fragmentsDir, name)
+        const blueprintPath = resolve(path, 'blueprint.js')
+        return {
+            blueprint: existsSync(blueprintPath) && require(blueprintPath),
+            folder: resolve(path, 'template'),
+            path,
+        }
+    })
 }
 
 /**
