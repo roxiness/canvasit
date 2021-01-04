@@ -1,54 +1,71 @@
 const { resolve } = require('path')
-const { deepAssign, isObjectOrArray, stringify } = require('./utils')
-const { mergeFiles } = require('./lib/fileMerger')
-const { readFileSync, writeFileSync } = require('fs-extra')
+const { deepAssign, isObjectOrArray, stringify } = require('./lib/utils')
+const { createHelpers } = require('./lib/helpers')
+const { fileWalker } = require('./lib/fileWalker')
+const { patchFile } = require('./lib/filePatcher')
+const { outputFileSync, existsSync } = require('fs-extra')
 
 function merge(fragmentsDir, combos, output) {
-    const fragments = combos.map(name => ({
-        blueprint: require(`${fragmentsDir}/${name}/blueprint.js`),
-        path: resolve(fragmentsDir, name)
-    }))
-    const folders = fragments.map(f => f.path + '/template')
+    const fragments = combos.map(name => {
+        const path = resolve(fragmentsDir, name)
+        const blueprintPath = resolve(path, 'blueprint.js')
+        return {
+            blueprint: existsSync(blueprintPath) && require(blueprintPath),
+            folder: resolve(path, 'template'),
+            path,
+        }
+    })
+    const folders = fragments.map(f => f.folder)
     const configs = {}
-    const helpers = {
-        transform: (filename, transformFn) => {
-            const file = resolve(output, filename)
-            const content = readFileSync(file, 'utf-8')
-            const newContent = transformFn(content)
-            writeFileSync(file, newContent)
-        },
-        writeTo: (filename, content) => {
-            const file = resolve(output, filename)
-            writeFileSync(file, content)
-        },
-        stringify,
-        configs
-    }
+    const ctx = { configs, fragments, output, folders }
+    const handleEvent = createEventHandler(ctx)
 
     // create configs
-    for (let fragment of fragments) {
-        if (fragment.blueprint.configs)
-            deepAssign(configs, fragment.blueprint.configs({
-                getConfig,
-                stringify
-            }))
-    }
-    // copy files
-    mergeFiles({ folders, configs, output })
+    handleEvent('beforeConfig')
+    populateConfigs(fragments, configs)
+    handleEvent('afterConfig')
 
-    // run transforms
-    for (let fragment of fragments) {
-        if (fragment.blueprint.events && fragment.blueprint.events.afterPatch)
-            fragment.blueprint.events.afterPatch({ ...helpers })
-    }
+    // copy files
+    handleEvent('beforeCopy')
+    fileWalker(folders, file => {
+        if (!file.filepath.match(/.+\.fragment\.(j|t)s/)) {
+            const dest = resolve(output, file.relativePath)
+            outputFileSync(dest, file.content)
+        }
+    })
+    handleEvent('afterCopy')
+
+
+    handleEvent('beforePatch')
+    fileWalker(output, file => patchFile(file.filepath, folders, output, configs))
+    handleEvent('afterPatch')
 
     return { configs }
+}
 
+/**
+ * walks through fragments to build a config
+ * @param {{}[]} fragments 
+ * @param {Object.<string, {}>} configs 
+ */
+function populateConfigs(fragments, configs) {
+    const blueprintHelpers = { getConfig, stringify }
+
+    for (let fragment of fragments) {
+        if (fragment.blueprint.configs)
+            deepAssign(configs, fragment.blueprint.configs(blueprintHelpers))
+    }
+    return configs
+
+    /**
+     * returns a root config by deep assigning the specified config from all blueprints
+     * @param {string} name 
+     */
     function getConfig(name) {
         if (!configs[name]) {
             configs[name] = {}
             for (let fragment of fragments) {
-                const source = fragment.blueprint.configs({ getConfig, stringify })[name]
+                const source = fragment.blueprint.configs(blueprintHelpers)[name]
                 if ([configs[name], source].every(isObjectOrArray)) {
                     configs[name] = deepAssign(configs[name], source)
                 }
@@ -60,5 +77,16 @@ function merge(fragmentsDir, combos, output) {
     }
 }
 
+function createEventHandler(ctx) {
+    return function handleEvent(eventName) {
+        for (let { blueprint } of ctx.fragments) {
+            if (blueprint.events && blueprint.events[eventName]) {
+                const callback = blueprint.events[eventName]
+                const helpers = createHelpers(ctx)
+                callback(helpers)
+            }
+        }
+    }
+}
 
 module.exports = { merge }
