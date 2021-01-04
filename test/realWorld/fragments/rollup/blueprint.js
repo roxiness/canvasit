@@ -21,7 +21,7 @@ module.exports = {
             },
             plugins: [
                 // resolve matching modules from current working directory
-                `resolve(${stringify(getConfig('rollupResolve'),2)})`,
+                `resolve(${stringify(getConfig('rollupResolve'), 2)})`,
                 `commonjs()`,
 
                 "production && terser()",
@@ -32,9 +32,8 @@ module.exports = {
             ],
         }
     }),
-    actions: [
-        ({ transform, configs, stringify }) => {
+    events: {
+        afterPatch: ({ transform, configs, stringify }) =>
             transform('rollup.config.js', str => str.replace(/__ROLLUP_CONFIG__/, stringify(configs.rollup)))
-        }
-    ],
+    },
 }

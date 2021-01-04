@@ -12,7 +12,7 @@ module.exports = {
             actualArray: [
                 '"thing one"',
                 '"thing two"'
-            ],  
+            ],
             compiled: {
                 literal: getConfig('literalArray'),
                 literalArray: getConfig('literalArray'),
@@ -20,9 +20,12 @@ module.exports = {
             }
         }
     }),
-    actions: [
-        ({ transform, configs, writeTo, stringify }) => {
+    events: {
+        beforeCopy: () => { },
+        afterCopy: () => { },
+        beforePatch: () => { },
+        afterPatch: ({ transform, configs, writeTo, stringify }) => { 
             writeTo('myconfig.js', `module.exports.default = ${stringify(configs.output)}`)
         }
-    ]
+    }
 }

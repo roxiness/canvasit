@@ -38,9 +38,8 @@ function merge(fragmentsDir, combos, output) {
 
     // run transforms
     for (let fragment of fragments) {
-        for (let action of fragment.blueprint.actions || []) {
-            action({ ...helpers })
-        }
+        if (fragment.blueprint.events && fragment.blueprint.events.afterPatch)
+            fragment.blueprint.events.afterPatch({ ...helpers })
     }
 
     return { configs }
