@@ -1,15 +1,15 @@
 const test = require('ava').default
-const { mergeFiles } = require('../../lib/fileMerger')
+const { merge } = require('../../templater')
 const { readFileSync, emptyDirSync } = require('fs-extra')
 
 test('files are copied and patched', t => {    
-    const folders = ['base', 'overwrite', 'overwrite-and-patch', 'patch']
-        .map(name => `${__dirname}/fragments/${name}`)
-    const configs = {}
+    const combos = ['base', 'overwrite', 'overwrite-and-patch', 'patch']
     const output = __dirname + '/output'
     emptyDirSync(output)
 
-    mergeFiles({ folders, configs, output })
+    merge( __dirname+'/fragments', combos, output )
+
+
 
     const content = readFileSync(__dirname+'/output/to-be-overwritten-and-patched.js', 'utf-8')
     t.is(content, 'module.exports.placeholder10 = 10\n\n'+
