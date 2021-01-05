@@ -3,6 +3,7 @@
   "version": "0.0.2",
   "description": "",
   "main": "canvasit.js",
+  "bin": "lib/cli.js",
   "directories": {
     "test": "test"
   },
@@ -24,6 +25,8 @@
     ]
   },
   "dependencies": {
+    "chokidar": "^3.4.3",
+    "dashargs": "^4.1.2",
     "fs-extra": "^9.0.1",
     "prettier": "^2.2.1"
   }

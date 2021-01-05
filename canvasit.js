@@ -1,12 +1,30 @@
-const { resolve } = require('path')
+const { resolve, relative } = require('path')
 const { deepAssign, isObjectOrArray, stringify } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { outputFileSync, existsSync } = require('fs-extra')
+const { outputFileSync, existsSync, unlinkSync } = require('fs-extra')
+const { watch } = require('chokidar')
 
-function merge(combos, output) {
-    const fragments = createFragments(combos)
+function merge(paths, output, options = {}) {
+    const _run = path => run(paths, output, options)
+
+    if (options.watch) {
+        watch(paths)
+            .on('add', _run)
+            .on('change', _run)
+            .on('unlink', path => {
+                const rp = getRelativePath(path, paths)
+                const outputFile = (resolve(output, rp))
+                unlinkSync(outputFile)
+                _run()
+            })
+    }
+    return _run()
+}
+
+function run(paths, output, options) {
+    const fragments = createFragments(paths)
     const folders = fragments.map(f => f.folder)
     const configs = {}
     const ctx = { configs, fragments, output, folders }
@@ -35,11 +53,20 @@ function merge(combos, output) {
     return { configs }
 }
 
+function getRelativePath(path, paths) {
+    for (const parent of paths) {
+        const parentPath = resolve(parent, 'template')
+        if (path.startsWith(parentPath)) {            
+            return relative(parentPath, path)
+        }
+    }
+}
+
 /**
- * @param {string[]} combos 
+ * @param {string[]} paths 
  */
-function createFragments( combos) {
-    return combos.map(path => {
+function createFragments(paths) {
+    return paths.map(path => {
         const blueprintPath = resolve(path, 'blueprint.js')
         return {
             blueprint: existsSync(blueprintPath) && require(blueprintPath),
