@@ -3,10 +3,21 @@ const { deepAssign, isObjectOrArray, stringify } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { outputFileSync, existsSync, unlinkSync } = require('fs-extra')
+const { outputFileSync, existsSync, unlinkSync, emptyDirSync } = require('fs-extra')
 const { watch } = require('chokidar')
+const { configent } = require('configent')
 
 function merge(paths, output, options = {}) {
+    output = output || options.output || 'output'
+    output = resolve(output)
+    options = configent({}, options)
+    
+    if (options.include)
+        paths = [...options.include, ...paths]
+
+    if (options.basepath)
+        paths = paths.map(p => resolve(options.basepath, p))
+
     const _run = path => run(paths, output, options)
 
     if (options.watch) {
@@ -24,8 +35,9 @@ function merge(paths, output, options = {}) {
 }
 
 function run(paths, output, options) {
+    emptyDirSync(output)
     const fragments = createFragments(paths)
-    const folders = fragments.map(f => f.folder)
+    const folders = fragments.map(f => f.template)
     const configs = {}
     const ctx = { configs, fragments, output, folders }
     const handleEvent = createEventHandler(ctx)
@@ -56,7 +68,7 @@ function run(paths, output, options) {
 function getRelativePath(path, paths) {
     for (const parent of paths) {
         const parentPath = resolve(parent, 'template')
-        if (path.startsWith(parentPath)) {            
+        if (path.startsWith(parentPath)) {
             return relative(parentPath, path)
         }
     }
@@ -70,7 +82,7 @@ function createFragments(paths) {
         const blueprintPath = resolve(path, 'blueprint.js')
         return {
             blueprint: existsSync(blueprintPath) && require(blueprintPath),
-            folder: resolve(path, 'template'),
+            template: resolve(path, 'template'),
             path,
         }
     })
