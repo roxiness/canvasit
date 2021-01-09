@@ -1,8 +1,8 @@
 module.exports = {
-    configs: ({ getConfig, stringify }) => ({
+    configs: ({ getConfig, stringify, getConfigString }) => ({
         rollup: {
             plugins: [
-                `svelte(${stringify(getConfig('svelte'), 2)})`,
+                `svelte(${getConfigString('svelte')})`,
             ]
         },
         svelte: {

@@ -1,5 +1,5 @@
 module.exports = {
-    configs: ({ getConfig, stringify }) => ({
+    configs: ({  getConfigString }) => ({
         packagejson: {
             scripts: {
                 'dev:rollup': 'rollup -cw'
@@ -21,7 +21,7 @@ module.exports = {
             },
             plugins: [
                 // resolve matching modules from current working directory
-                `resolve(${stringify(getConfig('rollupResolve'), 2)})`,
+                `resolve(${getConfigString('rollupResolve')})`,
                 `commonjs()`,
 
                 "production && terser()",
@@ -33,7 +33,7 @@ module.exports = {
         }
     }),
     events: {
-        afterPatch: ({ transform, configs, stringify }) =>
+        beforePatch: ({ transform, configs, stringify }) =>
             transform('rollup.config.js', str => str.replace(/__ROLLUP_CONFIG__/, stringify(configs.rollup)))
     },
 }

@@ -23,7 +23,8 @@ test('configs are written correctly', async t => {
     await wait(100)
     fragFiles.write('frag1/template/frag1.1.txt')
     await wait(100)
-    t.is(outputFiles.read('frag1.1.txt'), 'frag1/template/frag1.1.txt',
+    
+    t.assert(outputFiles.exists('frag1.1.txt'),
         'new files should show up in output')
 
     await wait(100)

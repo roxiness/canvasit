@@ -1,9 +1,9 @@
 const test = require('ava').default
 const { merge } = require('../../canvasit')
 
-function mergeWithBaseDir(combos){
-    const output = __dirname+'/output'
-    return merge(combos.map(name => __dirname+'/fragments/'+name), output)
+function mergeWithBaseDir(combos) {
+    const output = __dirname + '/output'
+    return merge(combos.map(name => __dirname + '/fragments/' + name), output)
 }
 
 test('config from self', t => {
@@ -11,6 +11,18 @@ test('config from self', t => {
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
+        complex: { array: ['string'] },
+        getString: 'string',
+        getObject: { object: 'object' }
+    })
+})
+
+test('config from self and extended', t => {
+    const { configs } = mergeWithBaseDir(['getConfigFromSelf', 'extended'])
+    t.deepEqual(configs, {
+        string: 'string',
+        object: { object: 'object' },
+        complex: { array: ['string', 'string2'] },
         getString: 'string',
         getObject: { object: 'object' }
     })
@@ -21,6 +33,7 @@ test('config from other', t => {
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
+        complex: { array: ['string'] },
         getString: 'string',
         getObject: { object: 'object' },
         stringFromOther: 'string',
@@ -33,6 +46,7 @@ test('config from derived', t => {
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
+        complex: { array: ['string'] },
         stringFromOther: 'string',
         objectFromOther: { object: 'object' },
         getString: 'string',
@@ -48,6 +62,7 @@ test('config from derived reversed', t => {
     t.deepEqual(configs, {
         string: 'string',
         object: { object: 'object' },
+        complex: { array: ['string'] },
         stringFromOther: 'string',
         objectFromOther: { object: 'object' },
         getString: 'string',
@@ -58,10 +73,7 @@ test('config from derived reversed', t => {
 })
 
 test('loop', t => {
-    const { configs } = mergeWithBaseDir(['getLoop'])
-    t.deepEqual(configs, {
-        loop1: {},
-        loop2: {},
-    })
+    const err = t.throws(() => mergeWithBaseDir(['getLoop']))
+    t.is(err.message, 'circular symlinks [{"__symlink":"loop2"},{"__symlink":"loop1"}]')
 })
 
