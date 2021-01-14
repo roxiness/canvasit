@@ -1,11 +1,17 @@
-const { resolve, relative } = require('path')
+const { resolve, relative, parse } = require('path')
 const { deepAssign, isObject, stringify } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { outputFileSync, existsSync, unlinkSync, emptyDirSync, unlink, readdirSync, removeSync } = require('fs-extra')
+const { outputFileSync, existsSync, unlinkSync, emptyDirSync, unlink, readFileSync, readdirSync, removeSync, mkdirSync, ensureDirSync } = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
+
+function verifyPathsExist(paths) {
+    paths.forEach(path => {
+        if (!existsSync(path)) throw new Error(`could not find fragment: "${path}"`)
+    })
+}
 
 function merge(paths, output, options = {}) {
     options = configent({ ignore: [] }, options)
@@ -21,6 +27,8 @@ function merge(paths, output, options = {}) {
     const _run = () => {
         return run(paths, output, options)
     }
+
+    verifyPathsExist(paths, output, options)
 
     if (options.watch) {
         const watcher = watch(paths)
@@ -47,16 +55,17 @@ function merge(paths, output, options = {}) {
                 })
             })
     }
+    clearOutput(output, options.ignore)
+    const result = _run()
     if (options.exec)
         runExec(options.exec, output)
-
-    return _run()
+    return result
 }
 function runExec(exec, output) {
     const [cmd, ...params] = exec.split(' ')
     require('child_process').spawn(cmd, params, {
         cwd: output,
-        stdio: ['ignore', 'inherit', 'inherit'],
+        stdio: ['inherit', 'inherit', 'inherit'],
         shell: true,
     })
 }
@@ -72,11 +81,14 @@ function clearOutput(output, ignore) {
 }
 
 function run(paths, output, options) {
-    clearOutput(output, options.ignore)
+    const basename = parse(output).base
+    ensureDirSync('temp')
+    const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
+
     const fragments = createFragments(paths)
     const folders = fragments.map(f => f.template)
     const configs = {}
-    const ctx = { configs, fragments, output, folders }
+    const ctx = { configs, fragments, output: tmpOutput, folders }
     const handleEvent = createEventHandler(ctx)
 
     // create configs
@@ -84,20 +96,31 @@ function run(paths, output, options) {
     populateConfigs(fragments, configs)
     handleEvent('afterConfig')
 
-    // copy files
+    // copy non fragment files to tmp
     handleEvent('beforeCopy')
     fileWalker(folders, file => {
         if (!file.filepath.match(/.+\.fragment\.(j|t)s/)) {
-            const dest = resolve(output, file.relativePath)
-            outputFileSync(dest, file.content)
+            const dest = resolve(tmpOutput, file.relativePath)
+            if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content)
+                outputFileSync(dest, file.content)
         }
     }, options.ignore)
     handleEvent('afterCopy')
 
 
     handleEvent('beforePatch')
-    fileWalker(output, file => patchFile(file.filepath, folders, output, configs), options.ignore)
+    fileWalker(tmpOutput, file => patchFile(file.filepath, folders, tmpOutput, configs), options.ignore)
     handleEvent('afterPatch')
+
+    // copy tmp to actual folder
+    fileWalker(tmpOutput, file => {
+        const dest = resolve(output, file.relativePath)
+        if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content) {
+            outputFileSync(dest, file.content)
+        }
+
+    }, options.ignore)
+    removeSync(tmpOutput)
 
     return { configs }
 }
@@ -117,11 +140,11 @@ function getRelativePath(path, paths) {
 function createFragments(paths) {
     return paths.map(path => {
         const blueprintPath = resolve(path, 'blueprint.js')
-        return {
-            blueprint: existsSync(blueprintPath) && require(blueprintPath),
-            template: resolve(path, 'template'),
-            path,
-        }
+        const blueprint = existsSync(blueprintPath) && require(blueprintPath)
+        const template = resolve(path, 'template')
+        if (!blueprint)
+            console.log(`[canvasit] no blueprint exists for ${path}`)
+        return { blueprint, template, path }
     })
 }
 
@@ -143,24 +166,8 @@ function populateConfigs(fragments, configs) {
      * returns a root config by deep assigning the specified config from all blueprints
      * @param {string} name 
      */
-    function getConfig(name) {
-        return { __symlink: name }
-        // if (!configs[name]) {
-        //     configs[name] = {}
-        //     while (fragment = fragments.shift()) {
-        //         const source = fragment.blueprint.configs(blueprintHelpers)[name]
-        //         if ([configs[name], source].every(isObjectOrArray)) {
-        //             configs[name] = deepAssign(configs[name], source)
-        //         }
-        //         else if (typeof source !== 'undefined')
-        //             configs[name] = source
-        //     }
-        // }
-        // return configs[name]
-    }
-    function getConfigString(name) {
-        return `__SYMLINK(${name})__`
-    }
+    function getConfig(name) { return { __symlink: name } }
+    function getConfigString(name) { return `__SYMLINK(${name})__` }
 }
 
 function replaceSymlinks(configs) {
