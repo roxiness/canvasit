@@ -1,5 +1,5 @@
 const { resolve, relative, parse } = require('path')
-const { deepAssign, isObject, stringify } = require('./lib/utils')
+const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
@@ -7,11 +7,6 @@ const { outputFileSync, existsSync, unlinkSync, emptyDirSync, unlink, readFileSy
 const { watch } = require('chokidar')
 const { configent } = require('configent')
 
-function verifyPathsExist(paths) {
-    paths.forEach(path => {
-        if (!existsSync(path)) throw new Error(`could not find fragment: "${path}"`)
-    })
-}
 
 function merge(paths, output, options = {}) {
     options = configent({ ignore: [] }, options)
@@ -28,7 +23,7 @@ function merge(paths, output, options = {}) {
         return run(paths, output, options)
     }
 
-    verifyPathsExist(paths, output, options)
+    paths.forEach(verifyPathExists)
 
     if (options.watch) {
         const watcher = watch(paths)
@@ -46,8 +41,9 @@ function merge(paths, output, options = {}) {
                         console.log(`[canvasit] ${msg}: "${path}"`)
                         console.log(`[canvasit] Rebuilding`)
                         if (event === 'unlink') {
-                            const rp = getRelativePath(path, paths)
-                            const outputFile = (resolve(output, rp))
+                            const parentDirOfUnlik = paths.find(_path => path.startsWith(_path))
+                            const relativePathToUnlik = relative(resolve(parentDirOfUnlik, 'template'), path)
+                            const outputFile = resolve(output, relativePathToUnlik)
                             unlinkSync(outputFile)
                         }
                         _run()
@@ -55,12 +51,13 @@ function merge(paths, output, options = {}) {
                 })
             })
     }
-    clearOutput(output, options.ignore)
+    emptyDirPartial(output, options.ignore)
     const result = _run()
     if (options.exec)
         runExec(options.exec, output)
     return result
 }
+
 function runExec(exec, output) {
     const [cmd, ...params] = exec.split(' ')
     require('child_process').spawn(cmd, params, {
@@ -68,16 +65,6 @@ function runExec(exec, output) {
         stdio: ['inherit', 'inherit', 'inherit'],
         shell: true,
     })
-}
-
-function clearOutput(output, ignore) {
-    if (existsSync(output)) {
-        const files = readdirSync(output)
-        files.forEach(file => {
-            if (!ignore.includes(file))
-                removeSync(resolve(output, file))
-        })
-    }
 }
 
 function run(paths, output, options) {
@@ -125,14 +112,6 @@ function run(paths, output, options) {
     return { configs }
 }
 
-function getRelativePath(path, paths) {
-    for (const parent of paths) {
-        const parentPath = resolve(parent, 'template')
-        if (path.startsWith(parentPath)) {
-            return relative(parentPath, path)
-        }
-    }
-}
 
 /**
  * @param {string[]} paths 
