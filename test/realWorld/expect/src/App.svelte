@@ -7,4 +7,4 @@
   }
 </script>
 
-<Router { config } { routes } />
+<Router {config} {routes} />
