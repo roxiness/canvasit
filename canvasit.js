@@ -8,7 +8,7 @@ const { watch } = require('chokidar')
 const { configent } = require('configent')
 
 
-function merge(paths, output, options = {}) {
+async function merge(paths, output, options = {}) {
     options = configent({ ignore: [] }, options)
     output = output || options.output || 'output'
     output = resolve(output)
@@ -19,8 +19,8 @@ function merge(paths, output, options = {}) {
     if (options.basepath)
         paths = paths.map(p => resolve(options.basepath, p))
 
-    const _run = () => {
-        return run(paths, output, options)
+    const _run = async () => {
+        return await run(paths, output, options)
     }
 
     paths.forEach(verifyPathExists)
@@ -28,7 +28,7 @@ function merge(paths, output, options = {}) {
     if (options.watch) {
         const watcher = watch(paths)
             .on('ready', () => {
-                watcher.on('all', (event, path) => {
+                watcher.on('all', async (event, path) => {
                     const eventMap = {
                         'add': `added`,
                         'change': `changed`,
@@ -46,15 +46,17 @@ function merge(paths, output, options = {}) {
                             const outputFile = resolve(output, relativePathToUnlik)
                             unlinkSync(outputFile)
                         }
-                        _run()
+                        await _run()
                     }
                 })
             })
     }
     emptyDirPartial(output, options.ignore)
-    const result = _run()
-    if (options.exec)
-        runExec(options.exec, output)
+    const result = await _run()
+    // result.then(() => {
+        if (options.exec)
+            runExec(options.exec, output)
+    // })
     return result
 }
 
@@ -67,7 +69,7 @@ function runExec(exec, output) {
     })
 }
 
-function run(paths, output, options) {
+async function run(paths, output, options) {
     const basename = parse(output).base
     ensureDirSync('temp')
     const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
@@ -79,28 +81,28 @@ function run(paths, output, options) {
     const handleEvent = createEventHandler(ctx)
 
     // create configs
-    handleEvent('beforeConfig')
+    await handleEvent('beforeConfig')
     populateConfigs(fragments, configs)
-    handleEvent('afterConfig')
+    await handleEvent('afterConfig')
 
     // copy non fragment files to tmp
-    handleEvent('beforeCopy')
-    fileWalker(folders, file => {
+    await handleEvent('beforeCopy')
+    await fileWalker(folders, file => {
         if (!file.filepath.match(/.+\.fragment\.(j|t)s/)) {
             const dest = resolve(tmpOutput, file.relativePath)
             if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content)
                 outputFileSync(dest, file.content)
         }
     }, options.ignore)
-    handleEvent('afterCopy')
+    await handleEvent('afterCopy')
 
 
-    handleEvent('beforePatch')
-    fileWalker(tmpOutput, file => patchFile(file.filepath, folders, tmpOutput, configs), options.ignore)
-    handleEvent('afterPatch')
+    await handleEvent('beforePatch')
+    await fileWalker(tmpOutput, async file => await patchFile(file.filepath, folders, tmpOutput, configs), options.ignore)
+    await handleEvent('afterPatch')
 
     // copy tmp to actual folder
-    fileWalker(tmpOutput, file => {
+    await fileWalker(tmpOutput, file => {
         const dest = resolve(output, file.relativePath)
         if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content) {
             outputFileSync(dest, file.content)
@@ -189,12 +191,12 @@ function resolveSymlinks(configs) {
 }
 
 function createEventHandler(ctx) {
-    return function handleEvent(eventName) {
+    return async function handleEvent(eventName) {
         for (let { blueprint } of ctx.fragments) {
             if (blueprint.events && blueprint.events[eventName]) {
                 const callback = blueprint.events[eventName]
                 const helpers = createHelpers(ctx)
-                callback(helpers)
+                await callback(helpers)
             }
         }
     }

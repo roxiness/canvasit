@@ -3,12 +3,12 @@ const { merge } = require('../../canvasit')
 const { readFileSync, emptyDirSync } = require('fs-extra')
 
 
-test('files are copied and patched', t => {    
+test('files are copied and patched', async t => {    
     const combos = ['base', 'overwrite', 'overwrite-and-patch', 'patch']
     const output = __dirname + '/output'
     emptyDirSync(output)
     
-    merge(combos.map(name => __dirname+'/fragments/'+name), output)
+    await merge(combos.map(name => __dirname+'/fragments/'+name), output)
     
 
 

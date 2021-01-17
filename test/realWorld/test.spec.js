@@ -3,12 +3,12 @@ const { merge } = require('../../canvasit')
 const { resolve } = require('path')
 const { emptyDirSync, readdirSync, readFileSync, statSync } = require('fs-extra')
 
-test('realworld', t => {
+test('realworld', async t => {
   emptyDirSync(__dirname + '/output')
 
   const paths = ['app', 'rollup', 'svelte', 'routify'].map(path => __dirname + '/fragments/' + path)
 
-  const res = merge(paths, __dirname + '/output')
+  await merge(paths, __dirname + '/output')
 
   compareDirs(__dirname + '/output', __dirname + '/expect', t)
 })

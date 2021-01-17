@@ -14,7 +14,7 @@ test('configs are written correctly', async t => {
     fragFiles.write('frag3/template/frag3.txt')
 
     const files = ['frag1', 'frag2', 'frag3'].map(fragFiles.path)
-    merge(files, outputFiles.base, { watch: true })
+    await merge(files, outputFiles.base, { watch: true })
 
     t.is(outputFiles.read('frag1.txt'), 'frag1/template/frag1.txt')
     t.is(outputFiles.read('frag2.txt'), 'frag2/template/frag2.txt')
