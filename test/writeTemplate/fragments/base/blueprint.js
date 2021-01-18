@@ -18,6 +18,6 @@ module.exports = {
     }),
     events: {
         afterPatch: ({ transform, configs, stringify }) =>
-            transform('app.config.js', str => str.replace(/__BASE_CONFIG__/, stringify(configs.output)))
+            transform('app.config.js', str => str.replace(/replaceme/, stringify(configs.output)))
     },
 }
