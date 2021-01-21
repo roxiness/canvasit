@@ -7,6 +7,8 @@ const { argv } = require('dashargs');
 
 const { fragments, ...options } = argv();
 
+if (!fragments) return console.log('Please supply the fragments arg.');
+
 merge(fragments.split(/[, ]/), undefined, options);
 
 require('update-notifier')({ pkg }).notify();
