@@ -1,9 +1,11 @@
 {
   "name": "canvasit",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "main": "canvasit.js",
-  "bin": "bin/canvasit.js",
+  "bin": {
+    "canvasit": "bin/canvasit.js"
+  },
   "directories": {
     "test": "test"
   },
