@@ -38,8 +38,7 @@ async function merge(paths, output, options = {}) {
 
                     if (msg) {
                         Object.keys(require.cache).forEach(key => delete require.cache[key])
-                        console.log(`[canvasit] ${msg}: "${path}"`)
-                        console.log(`[canvasit] Rebuilding`)
+                        console.log(`[canvasit] Rebuilding (${msg}: "${path}")`)
                         if (event === 'unlink') {
                             const parentDirOfUnlik = paths.find(_path => path.startsWith(_path))
                             const relativePathToUnlik = relative(resolve(parentDirOfUnlik, 'template'), path)
@@ -54,8 +53,8 @@ async function merge(paths, output, options = {}) {
     emptyDirPartial(output, options.ignore)
     const result = await _run()
     // result.then(() => {
-        if (options.exec)
-            runExec(options.exec, output)
+    if (options.exec)
+        runExec(options.exec, output)
     // })
     return result
 }
@@ -123,8 +122,6 @@ function createFragments(paths) {
         const blueprintPath = resolve(path, 'blueprint.js')
         const blueprint = existsSync(blueprintPath) && require(blueprintPath)
         const template = resolve(path, 'template')
-        if (!blueprint)
-            console.log(`[canvasit] no blueprint exists for ${path}`)
         return { blueprint, template, path }
     })
 }
