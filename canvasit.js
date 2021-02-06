@@ -1,9 +1,9 @@
-const { resolve, relative, parse } = require('path')
+const { resolve, relative, parse, dirname } = require('path')
 const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { outputFileSync, existsSync, unlinkSync, emptyDirSync, unlink, readFileSync, readdirSync, removeSync, mkdirSync, ensureDirSync } = require('fs-extra')
+const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync } = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
 
@@ -89,8 +89,8 @@ async function run(paths, output, options) {
     await fileWalker(folders, file => {
         if (!file.filepath.match(/.+\.fragment\.(j|t)s/)) {
             const dest = resolve(tmpOutput, file.relativePath)
-            if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content)
-                outputFileSync(dest, file.content)
+            ensureDirSync(dirname(dest))
+            require('fs').copyFileSync(file.filepath, dest)
         }
     }, options.ignore)
     await handleEvent('afterCopy')
@@ -104,7 +104,8 @@ async function run(paths, output, options) {
     await fileWalker(tmpOutput, file => {
         const dest = resolve(output, file.relativePath)
         if (!existsSync(dest) || readFileSync(dest, 'utf8') !== file.content) {
-            outputFileSync(dest, file.content)
+            ensureDirSync(dirname(dest))
+            require('fs').copyFileSync(file.filepath, dest)
         }
 
     }, options.ignore)
