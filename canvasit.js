@@ -166,7 +166,7 @@ function replaceSymlinks(configs) {
         } else if (typeof prop === 'string')
             prop = prop.replace(/__SYMLINK\((\w+)\)__/g, str => {
                 const name = str.match(/__SYMLINK\((\w+)\)__/)[1]
-                return stringify(configs[name])
+                return stringify(_replaceSymlinks(configs[name]))
             })
         return prop
     }
