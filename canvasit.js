@@ -102,6 +102,9 @@ async function run(paths, output, options) {
     await fileWalker(tmpOutput, async file => await patchFile(file.filepath, folders, tmpOutput, configs), options.ignore)
     await handleEvent('afterPatch')
 
+    if (options.prettier)
+        execSync(`npx prettier "${tmpOutput}/**/*.{js,svelte}" --write --single-quote --no-semi`)
+        
     // copy tmp to actual folder
     await fileWalker(tmpOutput, file => {
         const dest = resolve(output, file.relativePath)
@@ -113,9 +116,6 @@ async function run(paths, output, options) {
     }, options.ignore)
     removeSync(tmpOutput)
 
-    if (options.prettier)
-        execSync(`npx prettier "${output}/**/*.{js,svelte}" --write --single-quote --no-semi`)
-    
     return { configs }
 }
 
