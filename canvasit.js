@@ -18,14 +18,11 @@ async function merge(paths, output, options = {}) {
     if (options.include)
         paths = [...options.include, ...paths]
 
-    if (options.basepath)
-        paths = paths.map(p => resolve(options.basepath, p))
 
     const _run = async () => {
         return await run(paths, output, options)
     }
 
-    paths.forEach(verifyPathExists)
 
     if (options.watch) {
         const watcher = watch(paths)
@@ -75,7 +72,7 @@ async function run(paths, output, options) {
     ensureDirSync('temp')
     const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
 
-    const fragments = createFragments(paths)
+    const fragments = [].concat(...paths.map(fragmentMapper(options.basepath)))
     const folders = fragments.map(f => f.template)
     const configs = {}
     const ctx = { configs, fragments, output: tmpOutput, folders }
@@ -116,20 +113,31 @@ async function run(paths, output, options) {
     }, options.ignore)
     removeSync(tmpOutput)
 
-    return { configs }
+    return { configs, fragments }
 }
 
 
-/**
- * @param {string[]} paths 
- */
-function createFragments(paths) {
-    return paths.map(path => {
+function fragmentMapper(basepath) {
+    const dupes = []
+    /**
+     * converts path to array of fragments: [...dependencies, { blueprint, template, path }]
+     * @param {string} path
+     */
+    return function mapFragment(path) {
+        if (dupes.includes(path))
+            return false
+        dupes.push(path)
+
+        path = basepath ? resolve(basepath, path) : path
+        verifyPathExists(path)
         const blueprintPath = resolve(path, 'blueprint.js')
         const blueprint = existsSync(blueprintPath) && require(blueprintPath)
         const template = resolve(path, 'template')
-        return { blueprint, template, path }
-    })
+        const dependencies = []
+            .concat(...(blueprint.dependencies || []).map(mapFragment))
+            .filter(Boolean)
+        return [...dependencies, { blueprint, template, path }]
+    }
 }
 
 /**
