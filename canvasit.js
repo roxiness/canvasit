@@ -72,7 +72,9 @@ async function run(paths, output, options) {
     ensureDirSync('temp')
     const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
 
-    const fragments = [].concat(...paths.map(fragmentMapper(options.basepath)))
+    const fragments = []
+        .concat(...paths.map(fragmentMapper(options.basepath)))
+        .filter(Boolean)
     const folders = fragments.map(f => f.template)
     const configs = {}
     const ctx = { configs, fragments, output: tmpOutput, folders }
@@ -133,9 +135,7 @@ function fragmentMapper(basepath) {
         const blueprintPath = resolve(path, 'blueprint.js')
         const blueprint = existsSync(blueprintPath) && require(blueprintPath)
         const template = resolve(path, 'template')
-        const dependencies = []
-            .concat(...(blueprint.dependencies || []).map(mapFragment))
-            .filter(Boolean)
+        const dependencies = [].concat(...(blueprint.dependencies || []).map(mapFragment))
         return [...dependencies, { blueprint, template, path }]
     }
 }
