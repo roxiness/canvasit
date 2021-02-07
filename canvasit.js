@@ -6,10 +6,12 @@ const { patchFile } = require('./lib/filePatcher')
 const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync } = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
+const { spawn, execSync } = require('child_process')
+const defaults = require('./default.config')
 
 
 async function merge(paths, output, options = {}) {
-    options = configent({ ignore: [] }, options)
+    options = configent(defaults, options)
     output = output || options.output || 'output'
     output = resolve(output)
 
@@ -61,7 +63,7 @@ async function merge(paths, output, options = {}) {
 
 function runExec(exec, output) {
     const [cmd, ...params] = exec.split(' ')
-    require('child_process').spawn(cmd, params, {
+    spawn(cmd, params, {
         cwd: output,
         stdio: ['inherit', 'inherit', 'inherit'],
         shell: true,
@@ -111,6 +113,9 @@ async function run(paths, output, options) {
     }, options.ignore)
     removeSync(tmpOutput)
 
+    if (options.prettier)
+        execSync(`npx prettier "${output}/**/*.{js,svelte}" --write --single-quote --no-semi`)
+    
     return { configs }
 }
 
