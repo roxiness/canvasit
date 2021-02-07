@@ -3,7 +3,7 @@ const { merge } = require('../../canvasit')
 
 async function mergeWithBaseDir(combos) {
     const output = __dirname + '/output'
-    return await merge(combos.map(name => __dirname + '/fragments/' + name), output)
+    return await merge(combos.map(name => __dirname + '/fragments/' + name), output, {prettier: false})
 }
 
 test('config from self', async t => {

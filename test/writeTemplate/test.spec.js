@@ -17,15 +17,12 @@ import 'moduleB'
 
 export default {
   bool: true,
-  fn: aFakeFunction("oot"),
+  fn: aFakeFunction('oot'),
   compiled: {
-    literal: ["foo", "bar"],
-    literalArray: ["foo", "bar"],
-    actualArray: [
-      "thing one",
-      "thing two"
-    ]
-  }
+    literal: ['foo', 'bar'],
+    literalArray: ['foo', 'bar'],
+    actualArray: ['thing one', 'thing two'],
+  },
 }
 `)
 })
