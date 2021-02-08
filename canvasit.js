@@ -19,14 +19,18 @@ async function merge(paths, output, options = {}) {
         paths = [...options.include, ...paths]
 
 
+    const fragments = []
+        .concat(...paths.map(fragmentMapper(options.basepath)))
+        .filter(Boolean)
+
     const _run = async () => {
-        return await run(paths, output, options)
+        return await run(fragments, output, options)
     }
 
-
     if (options.watch) {
-        const watcher = watch(paths)
+        const watcher = watch(fragments.map(f => f.path))
             .on('ready', () => {
+                console.log('watcher')
                 watcher.on('all', async (event, path) => {
                     const eventMap = {
                         'add': `added`,
@@ -67,14 +71,11 @@ function runExec(exec, output) {
     })
 }
 
-async function run(paths, output, options) {
+async function run(fragments, output, options) {
     const basename = parse(output).base
     ensureDirSync('temp')
     const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
 
-    const fragments = []
-        .concat(...paths.map(fragmentMapper(options.basepath)))
-        .filter(Boolean)
     const folders = fragments.map(f => f.template)
     const configs = {}
     const ctx = { configs, fragments, output: tmpOutput, folders }
@@ -103,7 +104,7 @@ async function run(paths, output, options) {
 
     if (options.prettier)
         execSync(`npx prettier "${tmpOutput}/**/*.{js,svelte}" --write --single-quote --no-semi`)
-        
+
     // copy tmp to actual folder
     await fileWalker(tmpOutput, file => {
         const dest = resolve(output, file.relativePath)
@@ -111,7 +112,6 @@ async function run(paths, output, options) {
             ensureDirSync(dirname(dest))
             require('fs').copyFileSync(file.filepath, dest)
         }
-
     }, options.ignore)
     removeSync(tmpOutput)
 
