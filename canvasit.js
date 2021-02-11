@@ -1,4 +1,4 @@
-const { resolve, relative, parse, dirname } = require('path')
+const { resolve, relative, parse, dirname, basename } = require('path')
 const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
@@ -10,14 +10,16 @@ const { spawn, execSync } = require('child_process')
 const defaults = require('./default.config')
 
 
-async function merge(paths, output, options = {}) {
+async function merge(paths = [], output, options = {}) {
     options = configent(defaults, options)
     output = output || options.output || 'output'
     output = resolve(output)
+    paths = typeof paths === 'string' ? paths.split(',') : paths
 
-    if (options.include)
-        paths = [...options.include, ...paths]
+    if (options.hooks.init)
+        await options.hooks.init({ options, paths })
 
+    paths.unshift(...options.include)
 
     const fragments = []
         .concat(...paths.map(fragmentMapper(options.basepath)))
@@ -30,7 +32,7 @@ async function merge(paths, output, options = {}) {
     if (options.watch) {
         const watcher = watch(fragments.map(f => f.path))
             .on('ready', () => {
-                console.log('watcher')
+                console.log('watching', fragments.map(f => f.name))
                 watcher.on('all', async (event, path) => {
                     const eventMap = {
                         'add': `added`,
@@ -135,8 +137,9 @@ function fragmentMapper(basepath) {
         const blueprintPath = resolve(path, 'blueprint.js')
         const blueprint = existsSync(blueprintPath) && require(blueprintPath)
         const template = resolve(path, 'template')
+        const name = blueprint.name || basename(path)
         const dependencies = [].concat(...(blueprint.dependencies || []).map(mapFragment))
-        return [...dependencies, { blueprint, template, path }]
+        return [...dependencies, { blueprint, template, path, name }]
     }
 }
 

@@ -5,5 +5,6 @@ module.exports = {
     watch: false,
     exec: null,
     ignore: [],
-    prettier: true
+    prettier: true,
+    hooks: {}
 }
