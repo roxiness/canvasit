@@ -20,7 +20,7 @@ module.exports = {
             }
         }
     }),
-    events: {
+    hooks: {
         beforeCopy: () => { },
         afterCopy: () => { },
         beforePatch: () => { },

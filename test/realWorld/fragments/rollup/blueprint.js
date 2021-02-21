@@ -32,7 +32,7 @@ module.exports = {
             ],
         }
     }),
-    events: {
+    hooks: {
         beforePatch: ({ transform, configs, stringify }) =>
             transform('rollup.config.js', str => str.replace(/__ROLLUP_CONFIG__/, stringify(configs.rollup)))
     },

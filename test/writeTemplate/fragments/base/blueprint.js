@@ -16,7 +16,7 @@ module.exports = {
             }
         }
     }),
-    events: {
+    hooks: {
         afterPatch: ({ transform, configs, stringify }) =>
             transform('app.config.js', str => str.replace(/replaceme/, stringify(configs.output)))
     },

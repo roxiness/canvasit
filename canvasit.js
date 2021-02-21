@@ -207,8 +207,8 @@ function resolveSymlinks(configs) {
 function createEventHandler(ctx) {
     return async function handleEvent(eventName) {
         for (let { blueprint } of ctx.fragments) {
-            if (blueprint.events && blueprint.events[eventName]) {
-                const callback = blueprint.events[eventName]
+            if (blueprint.hooks && blueprint.hooks[eventName]) {
+                const callback = blueprint.hooks[eventName]
                 const helpers = createHelpers(ctx)
                 await callback(helpers)
             }
