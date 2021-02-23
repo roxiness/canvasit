@@ -1,5 +1,5 @@
 const { resolve, relative, parse, dirname, basename } = require('path')
-const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists } = require('./lib/utils')
+const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists, $request } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
@@ -80,8 +80,12 @@ async function run(fragments, output, options) {
 
     const folders = fragments.map(f => f.template)
     const configs = {}
-    const ctx = { configs, fragments, output: tmpOutput, folders }
+    const imports = {}
+    const ctx = { configs, imports, fragments, output: tmpOutput, folders }
     const handleEvent = createEventHandler(ctx)
+
+    // map all fragment imports to imports
+    Object.assign(imports, ...fragments.map(f => f.blueprint && f.blueprint.imports))
 
     // create configs
     await handleEvent('beforeConfig')
@@ -101,7 +105,7 @@ async function run(fragments, output, options) {
 
 
     await handleEvent('beforePatch')
-    await fileWalker(tmpOutput, async file => await patchFile(file.filepath, folders, tmpOutput, configs), options.ignore)
+    await fileWalker(tmpOutput, async file => await patchFile(file.filepath, folders, tmpOutput, configs, imports), options.ignore)
     await handleEvent('afterPatch')
 
     if (options.prettier)
@@ -149,7 +153,7 @@ function fragmentMapper(basepath) {
  * @param {Object.<string, {}>} configs 
  */
 function populateConfigs(fragments, configs) {
-    const blueprintHelpers = { getConfig, stringify, getConfigString }
+    const blueprintHelpers = { $request, getConfig, stringify, getConfigString }
 
     for (fragment of fragments) {
         if (fragment.blueprint.configs)
