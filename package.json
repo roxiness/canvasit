@@ -1,6 +1,6 @@
 {
   "name": "canvasit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "",
   "main": "canvasit.js",
   "bin": {
