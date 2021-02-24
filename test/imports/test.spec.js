@@ -53,3 +53,16 @@ test('deeply nested dependency', async t => {
   const content = readFileSync(dir+'/file.js', 'utf-8')
   t.snapshot(content)
 })
+
+test('nested request', async t => {
+  const name = 'nestedRequest'
+  const dir = __dirname + '/output/' + name
+  emptyDirSync(dir)
+
+  const paths = [name].map(path => __dirname + '/fragments/' + path)
+
+  await merge(paths, dir)
+
+  const content = readFileSync(dir+'/file.js', 'utf-8')
+  t.snapshot(content)
+})
