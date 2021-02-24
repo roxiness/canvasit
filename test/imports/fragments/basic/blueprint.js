@@ -2,9 +2,9 @@ module.exports = {
     imports: {
         myPkg: ['my-package']
     },
-    configs: ({ $request }) => ({
+    configs: ({ $require }) => ({
         aConfig: {
-            entry: $request('myPkg')("'hey mum'")
+            entry: $require('myPkg')("'hey mum'")
         }
     }),
 }

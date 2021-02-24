@@ -1,5 +1,5 @@
 const { resolve, relative, parse, dirname, basename } = require('path')
-const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists, $request } = require('./lib/utils')
+const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists, $require } = require('./lib/utils')
 const { createHelpers } = require('./lib/helpers')
 const { fileWalker } = require('./lib/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
@@ -153,7 +153,7 @@ function fragmentMapper(basepath) {
  * @param {Object.<string, {}>} configs 
  */
 function populateConfigs(fragments, configs) {
-    const blueprintHelpers = { $request, getConfig, stringify, getConfigString }
+    const blueprintHelpers = { $require, getConfig, stringify, getConfigString }
 
     for (fragment of fragments) {
         if (fragment.blueprint.configs)

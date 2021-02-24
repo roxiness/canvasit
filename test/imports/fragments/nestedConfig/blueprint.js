@@ -2,10 +2,10 @@ module.exports = {
     imports: {
         myPkg: ['my-package']
     },
-    configs: ({ getConfigString, stringify, $request }) => ({
+    configs: ({ getConfigString, stringify, $require }) => ({
         serialize: { foo: '"bar"' },
         config: {
-            entry: $request('myPkg')(getConfigString('serialize'))
+            entry: $require('myPkg')(getConfigString('serialize'))
         }
     }),
 }

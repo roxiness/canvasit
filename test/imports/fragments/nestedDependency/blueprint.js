@@ -2,9 +2,9 @@ module.exports = {
     imports: {
         myPkg: ['my-package', 'nested']
     },
-    configs: ({ $request }) => ({
+    configs: ({ $require }) => ({
         config: {
-            entry: $request('myPkg')("'hey mum'")
+            entry: $require('myPkg')("'hey mum'")
         }
     }),
 }
