@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": true,
+    "emitDeclarationOnly": true,
+    "outFile": "index.d.ts",
+    "target": "ES5"
+  },
+  "include": ["lib", "canvasit.js", "typedef.js"]
+}

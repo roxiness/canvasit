@@ -1,15 +1,24 @@
-const { resolve, relative, parse, dirname, basename } = require('path')
-const { deepAssign, isObject, stringify, emptyDirPartial, verifyPathExists, $require } = require('./lib/utils')
-const { createHelpers } = require('./lib/helpers')
-const { fileWalker } = require('./lib/fileWalker')
+/// <reference path="./typedef.js" />
+
+const { resolve, relative, parse, dirname, } = require('path')
+const { emptyDirPartial } = require('./lib/utils')
+const { fragmentMapper } = require('./lib/blueprint/fragmentMapper')
+const { HookHelpers } = require('./lib/blueprint/hookHelpers')
+const { fileWalker } = require('./lib/utils/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
 const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync } = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
 const { spawn, execSync } = require('child_process')
+const { populateConfigs } = require('./lib/blueprint/populateConfig')
 const defaults = require('./default.config')
 
-
+/**
+ * 
+ * @param {string[]|string} paths 
+ * @param {string} output 
+ * @param {any} options 
+ */
 async function merge(paths = [], output, options = {}) {
     options = configent(defaults, options)
     output = output || options.output || 'output'
@@ -125,99 +134,21 @@ async function run(fragments, output, options) {
 }
 
 
-function fragmentMapper(basepath) {
-    const dupes = []
-    /**
-     * converts path to array of fragments: [...dependencies, { blueprint, template, path }]
-     * @param {string} path
-     */
-    return function mapFragment(path) {
-        if (dupes.includes(path))
-            return false
-        dupes.push(path)
 
-        path = basepath ? resolve(basepath, path) : path
-        verifyPathExists(path)
-        const blueprintPath = resolve(path, 'blueprint.js')
-        const blueprint = existsSync(blueprintPath) && require(blueprintPath)
-        const template = resolve(path, 'template')
-        const name = blueprint.name || basename(path)
-        const dependencies = [].concat(...(blueprint.dependencies || []).map(mapFragment))
-        return [...dependencies, { blueprint, template, path, name }]
-    }
-}
-
-/**
- * walks through fragments to build a config
- * @param {{}[]} fragments 
- * @param {Object.<string, {}>} configs 
- */
-function populateConfigs(fragments, configs) {
-    const blueprintHelpers = { $require, getConfig, stringify, getConfigString }
-
-    for (fragment of fragments) {
-        if (fragment.blueprint.configs)
-            deepAssign(configs, fragment.blueprint.configs(blueprintHelpers))
-    }
-    return replaceSymlinks(resolveSymlinks(configs))
-
-    /**
-     * returns a root config by deep assigning the specified config from all blueprints
-     * @param {string} name 
-     */
-    function getConfig(name) { return { __symlink: name } }
-    function getConfigString(name) { return `__SYMLINK(${name})__` }
-}
-
-function replaceSymlinks(configs) {
-    return _replaceSymlinks(configs)
-    function _replaceSymlinks(prop) {
-        if (Array.isArray(prop))
-            prop = prop.map(_replaceSymlinks)
-        else if (isObject(prop)) {
-            for ([key, value] of Object.entries(prop)) {
-                prop[key] = _replaceSymlinks(value)
-            }
-        } else if (typeof prop === 'string')
-            prop = prop.replace(/__SYMLINK\((\w+)\)__/g, str => {
-                const name = str.match(/__SYMLINK\((\w+)\)__/)[1]
-                return stringify(_replaceSymlinks(configs[name]))
-            })
-        return prop
-    }
-}
-
-function resolveSymlinks(configs) {
-    return _resolveSymlinks(configs)
-    function _resolveSymlinks(prop) {
-        const breadcrumbs = [...(this.breadcrumbs || [])]
-        if (breadcrumbs.includes(prop))
-            throw new Error(`circular symlinks ${JSON.stringify(this.breadcrumbs)}`)
-        breadcrumbs.push(prop)
-
-        if (prop.__symlink)
-            prop = _resolveSymlinks.bind({ breadcrumbs })(configs[prop.__symlink])
-        else if (Array.isArray(prop))
-            prop = prop.map(_resolveSymlinks)
-        else if (isObject(prop)) {
-            for ([key, value] of Object.entries(prop)) {
-                prop[key] = _resolveSymlinks(value)
-            }
-        }
-        return prop
-    }
-}
 
 function createEventHandler(ctx) {
     return async function handleEvent(eventName) {
         for (let { blueprint } of ctx.fragments) {
             if (blueprint.hooks && blueprint.hooks[eventName]) {
                 const callback = blueprint.hooks[eventName]
-                const helpers = createHelpers(ctx, blueprint)
+                const helpers = new HookHelpers({ ...ctx, blueprint })                
                 await callback(helpers)
             }
         }
     }
 }
 
-module.exports = { merge }
+/** @type {Blueprint} */
+let Blueprint
+
+module.exports = { merge, Blueprint }
