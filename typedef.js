@@ -15,7 +15,22 @@
  * @prop {'base'|'feature'|'template'|string} type
  * @prop {Object.<string, Import>=} imports
  * @prop {ConfigsCallBack=} configs
- * @prop {object=} hooks
+ * @prop {BlueprintHooks} hooks
+ */
+
+/**
+ * @typedef {object} BlueprintHooks
+ * @prop {BlueprintHookCallback} beforeConfig
+ * @prop {BlueprintHookCallback} afterConfig
+ * @prop {BlueprintHookCallback} beforeCopy
+ * @prop {BlueprintHookCallback} afterCopy
+ * @prop {BlueprintHookCallback} beforePatch
+ * @prop {BlueprintHookCallback} afterPatch
+ */
+
+/**
+ * @callback BlueprintHookCallback
+ * @param {import('./lib/blueprint/hookHelpers')['HookHelpers']['prototype']} BlueprintHook
  */
 
 /**
@@ -27,12 +42,3 @@
  * @callback ConfigsCallBack
  * @param {import('./lib/blueprint/configHelpers')['blueprintHelpers']} helpers
  */
-
- /**
-  * @type {object} hooks
-  * @prop 
-  */
-
-  /** @typedef {import('./lib/blueprint/hookHelpers').foo} createHookHelpers */
-
-  /** @typedef {createHookHelpers.helpers} HookHelpers */

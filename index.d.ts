@@ -11,10 +11,15 @@ declare module "lib/blueprint/$require" {
         toString(): string;
         is$require: boolean;
     };
+    /**
+     *
+     * @param {{dependencies: {}, declarations: {}}} param0
+     * @param {'commonjs'|'esm'} mode
+     */
     export function composeImports({ dependencies, declarations }: {
-        dependencies: any;
-        declarations: any;
-    }, mode?: string): {
+        dependencies: {};
+        declarations: {};
+    }, mode?: 'commonjs' | 'esm'): {
         imports: any[];
         declarations: any[];
     };
@@ -242,14 +247,21 @@ type Blueprint = {
         [x: string]: Import;
     } | undefined;
     configs?: ConfigsCallBack | undefined;
-    hooks?: object | undefined;
+    hooks: BlueprintHooks;
 };
+type BlueprintHooks = {
+    beforeConfig: BlueprintHookCallback;
+    afterConfig: BlueprintHookCallback;
+    beforeCopy: BlueprintHookCallback;
+    afterCopy: BlueprintHookCallback;
+    beforePatch: BlueprintHookCallback;
+    afterPatch: BlueprintHookCallback;
+};
+type BlueprintHookCallback = (BlueprintHook: typeof import("lib/blueprint/hookHelpers")['HookHelpers']['prototype']) => any;
 type Import = {
     entry: string[];
 };
 type ConfigsCallBack = (helpers: typeof import("lib/blueprint/configHelpers")['blueprintHelpers']) => any;
-type createHookHelpers = import('./lib/blueprint/hookHelpers').foo;
-type HookHelpers = any;
 declare module "lib/blueprint/fragmentMapper" {
     /**
      * Curried function: fragmentMapper(basepath)(path)
