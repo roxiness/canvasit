@@ -141,7 +141,7 @@ function createEventHandler(ctx) {
         for (let { blueprint } of ctx.fragments) {
             if (blueprint.hooks && blueprint.hooks[eventName]) {
                 const callback = blueprint.hooks[eventName]
-                const helpers = new HookHelpers({ ...ctx, blueprint })                
+                const helpers = new HookHelpers({ ...ctx, blueprint })
                 await callback(helpers)
             }
         }
