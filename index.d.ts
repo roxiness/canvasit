@@ -171,6 +171,9 @@ declare module "lib/blueprint/configHelpers" {
     import { $require } from "lib/blueprint/$require";
     import { stringify } from "lib/utils";
 }
+declare module "lib/utils/fileWalker" {
+    export function fileWalker(dirs: any, cb: any, ignore: any): Promise<void>;
+}
 declare module "lib/blueprint/hookHelpers" {
     export type HookHelperContext = {
         output: string;
@@ -208,6 +211,7 @@ declare module "lib/blueprint/hookHelpers" {
         fragments: any;
         blueprint: any;
         stringify: typeof stringify;
+        fileWalker: (callback: any) => Promise<void>;
         /**
          * transforms a file
          * @param {string} filename
@@ -278,9 +282,6 @@ declare module "lib/blueprint/populateConfig" {
     //  * @param {Object.<string, {}>} configs
      */
     export function populateConfigs(fragments: any, configs: any): any;
-}
-declare module "lib/utils/fileWalker" {
-    export function fileWalker(dirs: any, cb: any, ignore: any): Promise<void>;
 }
 declare module "default.config" {
     export const output: string;
