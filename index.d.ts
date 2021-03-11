@@ -172,7 +172,7 @@ declare module "lib/blueprint/configHelpers" {
     import { stringify } from "lib/utils";
 }
 declare module "lib/utils/fileWalker" {
-    export function fileWalker(dirs: any, cb: any, ignore: any): Promise<void>;
+    export function fileWalker(dirs: any, cb: any, ignore: any, root: any): Promise<void>;
 }
 declare module "lib/blueprint/hookHelpers" {
     export type HookHelperContext = {
@@ -199,8 +199,8 @@ declare module "lib/blueprint/hookHelpers" {
     * @typedef {string[]} Import
     */
     export class HookHelpers {
-        /** @param {HookHelperContext} HookHelperContext */
-        constructor(HookHelperContext: HookHelperContext);
+        /** @param {HookHelperContext} ctx */
+        constructor(ctx: HookHelperContext);
         output: string;
         configs: {
             [x: string]: any;
@@ -236,6 +236,7 @@ declare module "lib/blueprint/hookHelpers" {
             declarations: string[];
         };
         removeFile: (filename: any) => void;
+        moveFile: (target: any, destination: any) => void;
     }
     import { stringify } from "lib/utils";
 }
