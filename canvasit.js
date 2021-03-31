@@ -6,7 +6,15 @@ const { fragmentMapper } = require('./lib/blueprint/fragmentMapper')
 const { HookHelpers } = require('./lib/blueprint/hookHelpers')
 const { fileWalker } = require('./lib/utils/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync, mkdtempSync } = require('fs-extra')
+const {
+    existsSync,
+    readFileSync,
+    removeSync,
+    ensureDirSync,
+    mkdtempSync,
+    rmdirSync,
+    readdirSync
+} = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
 const { spawn, execSync } = require('child_process')
@@ -57,7 +65,7 @@ async function merge(paths = [], output, options = {}) {
                             const parentDirOfUnlik = paths.find(_path => path.startsWith(_path))
                             const relativePathToUnlik = relative(resolve(parentDirOfUnlik, 'template'), path)
                             const outputFile = resolve(output, relativePathToUnlik)
-                            unlinkSync(outputFile)
+                            removeSync(outputFile)
                         }
                         await _run()
                     }
@@ -66,10 +74,10 @@ async function merge(paths = [], output, options = {}) {
     }
     emptyDirPartial(output, options.ignore)
     const result = await _run()
-    
+
     if (options.exec)
         runExec(options.exec, output)
-    
+
     return result
 }
 
@@ -84,8 +92,9 @@ function runExec(exec, output) {
 
 async function run(fragments, output, options) {
     const basename = parse(output).base
-    ensureDirSync('.canvasit-temp')
-    const tmpOutput = mkdtempSync(`.canvasit-temp/${basename}-`)
+    const tmpPath = '.canvasit-temp'
+    ensureDirSync(tmpPath)
+    const tmpOutput = mkdtempSync(`${resolve(tmpPath, basename)}-`)
 
     const folders = fragments.map(f => f.template)
     const configs = {}
@@ -128,7 +137,10 @@ async function run(fragments, output, options) {
             require('fs').copyFileSync(file.filepath, dest)
         }
     }, options.ignore)
-    removeSync('.canvasit-temp')
+
+    removeSync(tmpOutput)
+    if (!readdirSync(tmpPath).length)
+        rmdirSync(tmpPath)
 
     return { configs, fragments }
 }
