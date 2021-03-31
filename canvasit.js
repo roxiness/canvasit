@@ -66,10 +66,10 @@ async function merge(paths = [], output, options = {}) {
     }
     emptyDirPartial(output, options.ignore)
     const result = await _run()
-    // result.then(() => {
+    
     if (options.exec)
         runExec(options.exec, output)
-    // })
+    
     return result
 }
 
