@@ -6,7 +6,7 @@ const { fragmentMapper } = require('./lib/blueprint/fragmentMapper')
 const { HookHelpers } = require('./lib/blueprint/hookHelpers')
 const { fileWalker } = require('./lib/utils/fileWalker')
 const { patchFile } = require('./lib/filePatcher')
-const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync } = require('fs-extra')
+const { existsSync, unlinkSync, readFileSync, removeSync, ensureDirSync, mkdtempSync } = require('fs-extra')
 const { watch } = require('chokidar')
 const { configent } = require('configent')
 const { spawn, execSync } = require('child_process')
@@ -84,8 +84,8 @@ function runExec(exec, output) {
 
 async function run(fragments, output, options) {
     const basename = parse(output).base
-    ensureDirSync('temp')
-    const tmpOutput = require('fs').mkdtempSync(`temp/${basename}-`)
+    ensureDirSync('.canvasit-temp')
+    const tmpOutput = mkdtempSync(`.canvasit-temp/${basename}-`)
 
     const folders = fragments.map(f => f.template)
     const configs = {}
@@ -128,7 +128,7 @@ async function run(fragments, output, options) {
             require('fs').copyFileSync(file.filepath, dest)
         }
     }, options.ignore)
-    removeSync(tmpOutput)
+    removeSync('.canvasit-temp')
 
     return { configs, fragments }
 }
