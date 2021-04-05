@@ -142,6 +142,8 @@ async function run(fragments, output, options) {
     if (!readdirSync(tmpPath).length)
         rmdirSync(tmpPath)
 
+    console.log('Created template in', output)
+    
     return { configs, fragments }
 }
 
