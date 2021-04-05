@@ -25,10 +25,10 @@ const defaults = require('./default.config')
  * 
  * @param {string[]|string} paths 
  * @param {string} output 
- * @param {any} options 
+ * @param {Object.<string, any>} input 
  */
-async function merge(paths = [], output, options = {}) {
-    options = configent(defaults, options)
+async function merge(paths = [], output, input = {}) {
+    const options = configent(defaults, input)
     output = output || options.output || 'output'
     output = resolve(output)
     paths = typeof paths === 'string' ? paths.split(',') : paths
@@ -126,8 +126,10 @@ async function run(fragments, output, options) {
     await fileWalker(tmpOutput, async file => await patchFile(file.filepath, folders, tmpOutput, configs, imports), options.ignore)
     await handleEvent('afterPatch')
 
-    if (options.prettier)
-        execSync(`npx prettier "${tmpOutput}/**/*.{js,svelte}" --write --single-quote --no-semi`)
+    if (options.prettier){
+        const plugins = options.prettierPlugins.map(p => `--plugin ${p}`).join(' ')
+        execSync(`npx prettier "${tmpOutput}/**/*.{js,svelte}" --write --single-quote --no-semi ${plugins}`)
+    }
 
     // copy tmp to actual folder
     await fileWalker(tmpOutput, file => {

@@ -6,5 +6,6 @@ module.exports = {
     exec: null,
     ignore: [],
     prettier: true,
-    hooks: {}
+    hooks: {},
+    prettierPlugins: []
 }
