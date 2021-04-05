@@ -147,9 +147,6 @@ async function run(fragments, output, options) {
     return { configs, fragments }
 }
 
-
-
-
 function createEventHandler(ctx) {
     return async function handleEvent(eventName) {
         for (let { blueprint } of ctx.fragments) {
