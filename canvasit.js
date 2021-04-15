@@ -37,6 +37,8 @@ async function merge(paths = [], output, input = {}) {
         await options.hooks.init({ options, paths })
 
     paths.unshift(...options.include)
+    if(!paths.length)
+        throw new Error('No paths were specified')
 
     const fragments = []
         .concat(...paths.map(fragmentMapper(options.basepath)))
